@@ -13,8 +13,11 @@ Interface
  according to device info accessible.
 
  jQuery.tv.isTv     bool
+
  jQuery.tv.isHbbtv  bool
+
  jQuery.tv.type     string   Device manufacturer/type
+ 
  jQuery.tv.id       string   identifier/serial number, 'unknown' if no data can be fetched/generated.
 
  jQuery.tvinfo();   TV info as single string (bult from jQuery.tv.* attributes)
