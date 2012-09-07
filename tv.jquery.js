@@ -2,6 +2,8 @@
  * @author Vladimir Reznichenko <kalessil@gmail.com>
  * @date   12.05.2012
  *
+ * https://github.com/kalessil/tv.jquery
+ *
  * Dual licensed under the MIT or GPL Version 2 licenses.
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.opensource.org/licenses/GPL-2.0
@@ -325,7 +327,7 @@
         {
             /* loop on object to match strings */
             var patterns = {
-                'Loewe':     deviceType.loewe,     'LOH/':  deviceType.loewe,
+                'Loewe':     deviceType.loewe,
                 'smart;':    deviceType.smartbox,
                 'videoweb;': deviceType.videoweb,
                 'TechniSat': deviceType.technisat,
