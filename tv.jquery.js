@@ -33,12 +33,13 @@
             __tv_ready_status = newState;
         }
 
-        if(__tv_ready_status == 'wait') {
+        if(__tv_ready_status === 'wait') {
             return;
         }
 
         $(document).ready(function(){
             $(document).trigger('tvready');
+            window.console.log('Device: ' + $.tv.type + ' #' + $.tv.id);
         });
     };
 
@@ -49,7 +50,8 @@
         smartbox:  'smartBox',
         videoweb:  'VideoWEB',
         technisat: 'TechniSat',
-        philips:   'Philips'
+        philips:   'Philips',
+        lge:       'LG Electronics'
     };
 
     var __css3uiNavSupported = false;
@@ -58,41 +60,6 @@
 
     /* variable to be used later in several places, reducing searches */
     var __headNode = document.querySelector('head');
-
-
-    /* Invoke psedo media CSS
-     *
-     * Will invoke pseudo media types like 'loewe', 'smartbox', 'opera-tv', 'webkit-tv' etc with 'screen'
-     */
-    var __invokePseudoMedia = function() {
-        /* does media attribute update */
-        var __loadLinksByMedia = function (mediaType)
-        {
-            if(!mediaType) {
-                return false;
-            }
-
-            var links = __headNode.querySelectorAll('link[media*="'+ mediaType.toLowerCase() +'"]');
-            for(var i = 0; i < links.length; ++i) {
-                links[i].setAttribute('media', 'screen');
-            }
-            return true;
-        };
-
-        /* Manufacturer-name pseudomedia */
-        __loadLinksByMedia($.tv.type == deviceType.unknown ? null : $.tv.type);
-
-        /* Browser pseudo media */
-        __loadLinksByMedia($.browser.opera  ? 'opera-tv' : null);
-        __loadLinksByMedia($.browser.webkit ? 'webkit-tv' : null);
-
-        /* CSS 3 Spatial navigation media */
-        __loadLinksByMedia(__css3uiNavSupported ? 'css3ui' : null);
-
-        return true;
-    };
-    /* Invoke psedo media CSS */
-
 
     var __grabInfo = function() {
         var __grabHardwareId = function(){
@@ -103,8 +70,6 @@
             __ready('wait');
 
             $(document).ready(function(){
-                /* first media corrections */
-                __invokePseudoMedia();
 
                 if(!document.getElementById('jquery-tv-hwdetect'))
                 {
@@ -121,6 +86,10 @@
                     var oipfConfig = document.createElement('object');
                     oipfConfig.setAttribute('id', 'oipf-config'); oipfConfig.setAttribute('type', 'application/oipfConfiguration');
                     container.appendChild(oipfConfig);
+
+                    var lgNetCastDevice = document.createElement('object');
+                    lgNetCastDevice.setAttribute('id', 'lgNetCastDevice'); oipfConfig.setAttribute('type', 'application/x-netcast-info');
+                    container.appendChild(lgNetCastDevice);
 
                     /* Modify document now with assembled injection */
                     document.querySelector('body').appendChild(container);
@@ -140,9 +109,10 @@
                         /* Do test */
                         __css3uiNavSupported = (typeof css4uiNav.style.navDown != 'undefined' && css4uiNav.style.navDown == '#css3ui-nav-test');
                     }
+                    $.tv.hasSpatialNav = __css3uiNavSupported;
 
                     /* Test cookie enabled */
-                     var cookieEnabled = (navigator.cookieEnabled) ? true : false;
+                     var cookieEnabled = navigator.cookieEnabled;
                      if (!cookieEnabled && typeof navigator.cookieEnabled == 'undefined')
                      { 
                           document.cookie = 'testcookie';
@@ -260,6 +230,9 @@
                        case deviceType.philips:
                            serial = 'PH' + serial;
                            break;
+                       case deviceType.lge:
+                           serial = 'LG' + serial;
+                           break;
                        
                        default:
                            serial = 'XX' + serial;
@@ -305,17 +278,31 @@
                 }
 
                 /* Non-standard capabilities */
+                /* Loewe */
                 if(typeof NetRangeDevice == 'object') {
                     /* Loewe */
                     $.tv.id = __prefixSerial(__toSerial(NetRangeDevice.getMACID()));
                     return __ready(true);
+                }
+                /* LG */
+                var lgNetCastDeviceObject = document.getElementById('lgNetCastDevice');
+                if(typeof lgNetCastDeviceObject.manufacturer != 'undefined') {
+                    if(typeof lgNetCastDevice.serialNumber != 'undefine') {
+                        $.tv.id = __prefixSerial(lgNetCastDevice.serialNumber);
+                        return __ready(true);
+                    }
+
+                    if(typeof lgNetCastDevice.net_macAddress != 'undefine') {
+                        $.tv.id = __prefixSerial(__toSerial(lgNetCastDevice.net_macAddress));
+                        return __ready(true);
+                    }
                 }
                 /* Non-standard capabilities */
 
 
                 /* failed do detect anything, fallback to fake MAC id */
                 $.tv.id = __prefixSerial(__serialNumberSelfAssign());
-                __ready(true);
+                return __ready(true);
             });
         };
 
@@ -327,11 +314,12 @@
         {
             /* loop on object to match strings */
             var patterns = {
-                'Loewe':     deviceType.loewe,
-                'smart;':    deviceType.smartbox,
-                'videoweb;': deviceType.videoweb,
-                'TechniSat': deviceType.technisat,
-                'Philips':   deviceType.philips,   'NetTV': deviceType.philips
+                'Loewe':      deviceType.loewe,
+                'smart;':     deviceType.smartbox,
+                'videoweb;':  deviceType.videoweb,
+                'TechniSat':  deviceType.technisat,
+                'Philips':    deviceType.philips,   'NetTV': deviceType.philips,
+                'LG NetCast': deviceType.lge
             };
             
             var ua = navigator.userAgent.toLowerCase();
@@ -358,7 +346,8 @@
             'isTv':    false,
             'isHbbtv': (navigator.userAgent.indexOf('HbbTV') >= 0),
             'type':    deviceType.unknown,
-            'id':      deviceType.unknown
+            'id':      deviceType.unknown,
+            'hasSpatialNav': false
         }
     });
     __grabInfo();
