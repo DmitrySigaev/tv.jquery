@@ -20,11 +20,12 @@
         return undefined;
     };
 
+    var headNode;
     var loadLinksByMediaName = function (strMediaName) {
         var strLinkSelector = 'link[media*="' + strMediaName + '"]';
-        var links = $('head').find(strLinkSelector);
+        var links = headNode.find(strLinkSelector);
 
-        for (var i = 0; i < links.length; ++i) {
+        for (var i = links.length - 1; i >= 0 ; --i) {
             links[i].setAttribute('media', 'screen');
         }
     };
@@ -39,24 +40,26 @@
 
         if ($.browser.opera) {
             arrMediasForLoad.push('opera-tv');
+            return arrMediasForLoad;
         }
         if ($.browser.webkit) {
             arrMediasForLoad.push('webkit-tv');
+            return arrMediasForLoad;
         }
 
         return arrMediasForLoad;
     }
 
     var runPlugin = function () {
+        headNode = $(document.getElementsByTagName('head')[0]);
+
         var arrMediasForLoad = getMediasForLoad(navigator.userAgent);
-        var strMediaName;
 
         var strLogMessage = 'Load pseudo medias: ' + arrMediasForLoad.join(', ');
         window.console.log(strLogMessage);
 
         for (var position in arrMediasForLoad) {
-            strMediaName = arrMediasForLoad[position];
-            loadLinksByMediaName(strMediaName);
+            loadLinksByMediaName(arrMediasForLoad[position]);
         }
     };
 

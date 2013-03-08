@@ -180,63 +180,59 @@
         }
     };
 
+    var lineBreakNode;
     /**
      * @param arrEntries
      */
     var gui_writeEntriesDown = function(arrEntries) {
-        var consoleNode = $('#tv-console');
+        consoleDivNode.innerHTML = '';
 
-        consoleNode.html('');
-
-        var entry;
         var strEntry;
-        var lineBreak = document.createElement('br');
+        var consoleNode = $(consoleDivNode);
         for(var position in arrEntries) {
-            entry = arrEntries[position];
-
-            strEntry = consoleBufferEntry_toString(entry);
+            strEntry = consoleBufferEntry_toString(arrEntries[position]);
             consoleNode.append(strEntry);
-            consoleNode.append(lineBreak.cloneNode());
+            consoleDivNode.appendChild(lineBreakNode.cloneNode());
         }
 
-        consoleNode.show();
+        consoleDivNode.style.display = 'block';
     };
 
+    var consoleDivNode;
     var gui_createDiv = function () {
-        var cssAttributes = {
-            'display':'none',
-            'position':'absolute',
-            'bottom':'0',
-            'left':'0',
-            'width':'100%',
-            'border-top':'solid 1px #c6c6c6',
-            'padding':'7px',
-            'color':'#a6a6a6',
-            'font-size':'0.9em'
-        };
-
-
         var divNode = document.createElement('div');
         divNode.setAttribute('id', 'tv-console');
 
-        divNode = $(divNode);
-        divNode.css(cssAttributes);
+        divNode.style.display = 'none';
+        divNode.style.position = 'absolute';
+        divNode.style.bottom = 0;
+        divNode.style.left = 0;
+        divNode.style.width = '100%';
+        divNode.style.borderTop = 'solid 1px #c6c6c6';
+        divNode.style.paddingTop = '7px';
+        divNode.style.paddingRight = '7px';
+        divNode.style.paddingBottom = '7px';
+        divNode.style.paddingLeft = '7px';
+        divNode.style.color = '#a6a6a6';
+        divNode.style.fontSize = '0.9em';
 
-        $('body').append(divNode);
-
+        document
+            .getElementsByTagName('body')[0]
+            .appendChild(divNode);
+        consoleDivNode = divNode;
     };
 
     var runPlugin = function () {
+        lineBreakNode = document.createElement('br');
+        window.console = consoleObject_create();
+
         var strNativeConsoleStatus = '';
         if(typeof window.console != 'undefined') {
             strNativeConsoleStatus = ' (native one is overridden)';
         }
-
-        window.console = consoleObject_create();
-
         consoleBuffer_registerEntry('TV console started' + strNativeConsoleStatus);
-        gui_createDiv();
 
+        gui_createDiv();
         window.console.refresh = gui_redraw;
         window.console.refresh();
     };
