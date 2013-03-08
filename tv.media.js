@@ -1,18 +1,17 @@
 (function ($) {
     var getTvVendorByUserAgent = function (strUserAgent) {
         var patterns = {
-            'Loewe':      'loewe',
-            'smart;':     'smartbox',
-            'videoweb;':  'videoweb',
-            'TechniSat':  'technisat',
-            'Philips':    'philips',
-            'NetTV':      'philips',
-            'LG NetCast': 'lgelectronics'
+            'loewe':      'link[media*="loewe"]',
+            'smart;':     'link[media*="smartbox"]',
+            'videoweb;':  'link[media*="videoweb"]',
+            'technisat':  'link[media*="technisat"]',
+            'philips':    'link[media*="philips"]',
+            'nettv':      'link[media*="philips"]',
+            'lg netcast': 'link[media*="lgelectronics"]'
         };
 
-        strUserAgent = strUserAgent.toLowerCase();
         for (var p in patterns) {
-            if (strUserAgent.indexOf(p.toLowerCase()) >= 0) {
+            if (strUserAgent.indexOf(p) >= 0) {
                 return patterns[p];
             }
         }
@@ -20,48 +19,42 @@
         return undefined;
     };
 
-    var headNode;
-    var loadLinksByMediaName = function (strMediaName) {
-        var strLinkSelector = 'link[media*="' + strMediaName + '"]';
-        var links = headNode.find(strLinkSelector);
+    var getMediasForLoad = function (strUserAgent) {
+        var arrMediasForLoad = [];
 
+        var strMediaVendorSelector = getTvVendorByUserAgent(strUserAgent);
+        if (strMediaVendorSelector != undefined) {
+            arrMediasForLoad.push(strMediaVendorSelector);
+        }
+
+        if (strUserAgent.indexOf('opera') >= 0) {
+            arrMediasForLoad.push('link[media*="opera-tv"]');
+            return arrMediasForLoad;
+        }
+        if (strUserAgent.indexOf('webkit') >= 0) {
+            arrMediasForLoad.push('link[media*="webkit-tv"]');
+            return arrMediasForLoad;
+        }
+
+        return arrMediasForLoad;
+    };
+
+    var runPlugin = function () {
+        headNode = document.getElementsByTagName('head')[0];
+
+        var arrMediasForLoad = getMediasForLoad(navigator.userAgent.toLowerCase());
+        arrMediasForLoad = arrMediasForLoad.join(', ');
+
+        var strLogMessage = 'Pseudo medias: ' + arrMediasForLoad;
+        window.console.log(strLogMessage);
+
+        var links = headNode.querySelectorAll(arrMediasForLoad);
         for (var i = links.length - 1; i >= 0 ; --i) {
             links[i].setAttribute('media', 'screen');
         }
     };
 
-    var getMediasForLoad = function (strUserAgent) {
-        var arrMediasForLoad = [];
-
-        var strMediaVendor = getTvVendorByUserAgent(strUserAgent);
-        if (strMediaVendor != undefined) {
-            arrMediasForLoad.push(strMediaVendor);
-        }
-
-        if ($.browser.opera) {
-            arrMediasForLoad.push('opera-tv');
-            return arrMediasForLoad;
-        }
-        if ($.browser.webkit) {
-            arrMediasForLoad.push('webkit-tv');
-            return arrMediasForLoad;
-        }
-
-        return arrMediasForLoad;
-    }
-
-    var runPlugin = function () {
-        headNode = $(document.getElementsByTagName('head')[0]);
-
-        var arrMediasForLoad = getMediasForLoad(navigator.userAgent);
-
-        var strLogMessage = 'Load pseudo medias: ' + arrMediasForLoad.join(', ');
-        window.console.log(strLogMessage);
-
-        for (var position in arrMediasForLoad) {
-            loadLinksByMediaName(arrMediasForLoad[position]);
-        }
-    };
-
+    var headNode;
     $(document).ready(runPlugin);
+
 })(jQuery);
