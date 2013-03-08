@@ -13,12 +13,6 @@
 (function ($) {
     var consoleBuffer = [];
 
-    var consoleBufferEntry_create = function (strMessage) {
-        return [strMessage, 1];
-    };
-    var consoleBufferEntry_isEqual = function (entry, strMessage) {
-        return entry[0] === strMessage;
-    };
     var consoleBufferEntry_toString = function (entry) {
         var strMessage = entry[0];
         var countAppeared = entry[1];
@@ -38,12 +32,12 @@
         }
     };
     var consoleBuffer_hasDuplicates = function (strMessage) {
-        var isDuplicate = false;
+        var isDuplicate;
         var entry;
 
         for (var position in consoleBuffer) {
             entry = consoleBuffer[position];
-            isDuplicate = consoleBufferEntry_isEqual(entry, strMessage);
+            isDuplicate = (entry[0] === strMessage);
             if (isDuplicate) {
                 return true;
             }
@@ -52,7 +46,7 @@
         return false;
     };
     var consoleBuffer_push = function (strMessage) {
-        var newEntry = consoleBufferEntry_create(strMessage);
+        var newEntry = [strMessage, 1];
         consoleBuffer.push(newEntry);
     };
     var consoleBuffer_popDuplicateUp = function (strMessage) {
@@ -61,7 +55,7 @@
 
         for (var position in consoleBuffer) {
             entry = consoleBuffer[position];
-            isDuplicate = consoleBufferEntry_isEqual(entry, strMessage);
+            isDuplicate = (entry[0] === strMessage);
             if (isDuplicate) {
                 var lastEntryPosition = consoleBuffer.length - 1;
 
@@ -84,7 +78,7 @@
 
         for (var position in consoleBuffer) {
             entry = consoleBuffer[position];
-            isDuplicate = consoleBufferEntry_isEqual(entry, strMessage);
+            isDuplicate = (entry[0] === strMessage);
             if (isDuplicate) {
                 ++consoleBuffer[position][1];
                 return;
@@ -131,7 +125,6 @@
                 consoleBuffer_clear();
                 consoleObject.refresh();
             }
-
         };
 
         return consoleObject;
@@ -143,9 +136,9 @@
         var strMethod = ajaxSettings.type;
 
         var isHttpsOn = (window.location.protocol.toLowerCase() === 'https');
-        if(isHttpsOn || true) {
+        if(isHttpsOn) {
             var ajaxProtocol = (strUrl.split(':', 1))[0];
-            if(ajaxProtocol === 'http' || true) {
+            if(ajaxProtocol === 'http') {
                 strUrl = strUrl.replace('http://', '<span style="color:#F00">http</span>://');
             }
         }
@@ -157,9 +150,7 @@
 
     /* attaching listeners */
     window.addEventListener('error', function (event) {
-        var strMessage = event.message;
-        window.console.error(strMessage);
-
+        window.console.error(event.message);
         return true;
     });
     $(document).ajaxError(function (event, jqXHR, ajaxSettings, thrownError) {
@@ -174,16 +165,13 @@
 
     var gui_redraw = function () {
         var hasEntries = consoleBuffer_count();
-
-        if (hasEntries) {
-            gui_writeEntriesDown(consoleBuffer);
+        if (!hasEntries) {
+            return;
         }
+
+        gui_writeEntriesDown(consoleBuffer);
     };
 
-    var lineBreakNode;
-    /**
-     * @param arrEntries
-     */
     var gui_writeEntriesDown = function(arrEntries) {
         consoleDivNode.innerHTML = '';
 
@@ -192,7 +180,7 @@
         for(var position in arrEntries) {
             strEntry = consoleBufferEntry_toString(arrEntries[position]);
             consoleNode.append(strEntry);
-            consoleDivNode.appendChild(lineBreakNode.cloneNode());
+            consoleDivNode.appendChild(lineBreakNode.cloneNode(false));
         }
 
         consoleDivNode.style.display = 'block';
@@ -237,6 +225,7 @@
         window.console.refresh();
     };
 
+    var lineBreakNode;
     $(document).ready(runPlugin);
 
 })(jQuery);
